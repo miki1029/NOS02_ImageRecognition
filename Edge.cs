@@ -70,7 +70,14 @@ namespace NOS02
                 }
                 if (find) break;
             }
-            if (!find) throw new Exception();
+            if (!find)
+            {
+                Console.WriteLine("2개의 노드와 연결되지 않은 간선이 존재합니다!");
+                if (prev != null)
+                {
+                    Console.WriteLine("노드 ({0}, {1})와 연결된 간선을 확인해 보세요.", prev.X, prev.Y);
+                }
+            }
         }
 
         public int PrevIdx

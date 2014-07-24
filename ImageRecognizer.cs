@@ -123,171 +123,173 @@ namespace NOS02
 
                 int curLeft = ScanEdgeLineLeft(seedPoint, adjNodePointList).X;
                 int curRight = ScanEdgeLineRight(seedPoint, adjNodePointList).X;
-                DrawHorizonLine(curLeft, curRight, seedPoint.Y);
+                if(DrawHorizonLine(curLeft, curRight, seedPoint.Y))
+                {
+                    if (flag == SearchDirection.UP)
+                    {
+                        for (int x = curLeft; x < prevLeft; x++)
+                        {
+                            Point upPoint = new Point(x, seedPoint.Y - 1);
+                            if (IsValidPoint(upPoint))
+                            {
+                                Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
+                                // 간선
+                                if (upColor.ToArgb() == Color.Black.ToArgb())
+                                {
+                                    if (!IsExistEdgePoint(upPoint))
+                                    {
+                                        SeedPointInfo newSeed = new SeedPointInfo(upPoint, curLeft, curRight, SearchDirection.DOWN);
+                                        readyQueue.Enqueue(newSeed);
+                                        x = ScanEdgeLineRight(upPoint).X;
+                                    }
+                                }
+                                // 배경
+                                else if (upColor.ToArgb() == Color.White.ToArgb()) continue;
+                                // 노드
+                                else
+                                {
+                                    adjNodePointList.Add(upPoint);
+                                }
+                            }
+                        }
+                        for (int x = prevRight + 1; x <= curRight; x++)
+                        {
+                            Point upPoint = new Point(x, seedPoint.Y - 1);
+                            if (IsValidPoint(upPoint))
+                            {
+                                Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
+                                // 간선
+                                if (upColor.ToArgb() == Color.Black.ToArgb())
+                                {
+                                    if (!IsExistEdgePoint(upPoint))
+                                    {
+                                        SeedPointInfo newSeed = new SeedPointInfo(upPoint, curLeft, curRight, SearchDirection.DOWN);
+                                        readyQueue.Enqueue(newSeed);
+                                        x = ScanEdgeLineRight(upPoint).X;
+                                    }
+                                }
+                                // 배경
+                                else if (upColor.ToArgb() == Color.White.ToArgb()) continue;
+                                // 노드
+                                else
+                                {
+                                    adjNodePointList.Add(upPoint);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int x = curLeft; x <= curRight; x++)
+                        {
+                            Point upPoint = new Point(x, seedPoint.Y - 1);
+                            if (IsValidPoint(upPoint))
+                            {
+                                Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
+                                // 간선
+                                if (upColor.ToArgb() == Color.Black.ToArgb())
+                                {
+                                    if (!IsExistEdgePoint(upPoint))
+                                    {
+                                        SeedPointInfo newSeed = new SeedPointInfo(upPoint, curLeft, curRight, SearchDirection.DOWN);
+                                        readyQueue.Enqueue(newSeed);
+                                        x = ScanEdgeLineRight(upPoint).X;
+                                    }
+                                }
+                                // 배경
+                                else if (upColor.ToArgb() == Color.White.ToArgb()) continue;
+                                // 노드
+                                else
+                                {
+                                    adjNodePointList.Add(upPoint);
+                                }
+                            }
+                        }
+                    }
 
-                if (flag == SearchDirection.UP)
-                {
-                    for (int x = curLeft; x < prevLeft; x++)
+                    if (flag == SearchDirection.DOWN)
                     {
-                        Point upPoint = new Point(x, seedPoint.Y - 1);
-                        if (IsValidPoint(upPoint))
+                        for (int x = curLeft; x < prevLeft; x++)
                         {
-                            Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
-                            // 간선
-                            if (upColor.ToArgb() == Color.Black.ToArgb())
+                            Point downPoint = new Point(x, seedPoint.Y + 1);
+                            if (IsValidPoint(downPoint))
                             {
-                                if (!IsExistEdgePoint(upPoint))
+                                Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
+                                // 간선
+                                if (downColor.ToArgb() == Color.Black.ToArgb())
                                 {
-                                    SeedPointInfo newSeed = new SeedPointInfo(upPoint, curLeft, curRight, SearchDirection.DOWN);
-                                    readyQueue.Enqueue(newSeed);
-                                    x = ScanEdgeLineRight(upPoint).X;
+                                    if (!IsExistEdgePoint(downPoint))
+                                    {
+                                        SeedPointInfo newSeed = new SeedPointInfo(downPoint, curLeft, curRight, SearchDirection.UP);
+                                        readyQueue.Enqueue(newSeed);
+                                        x = ScanEdgeLineRight(downPoint).X;
+                                    }
+                                }
+                                // 배경
+                                else if (downColor.ToArgb() == Color.White.ToArgb()) continue;
+                                // 노드
+                                else
+                                {
+                                    adjNodePointList.Add(downPoint);
                                 }
                             }
-                            // 배경
-                            else if (upColor.ToArgb() == Color.White.ToArgb()) continue;
-                            // 노드
-                            else
+                        }
+                        for (int x = prevRight + 1; x <= curRight; x++)
+                        {
+                            Point downPoint = new Point(x, seedPoint.Y + 1);
+                            if (IsValidPoint(downPoint))
                             {
-                                adjNodePointList.Add(upPoint);
+                                Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
+                                // 간선
+                                if (downColor.ToArgb() == Color.Black.ToArgb())
+                                {
+                                    if (!IsExistEdgePoint(downPoint))
+                                    {
+                                        SeedPointInfo newSeed = new SeedPointInfo(downPoint, curLeft, curRight, SearchDirection.UP);
+                                        readyQueue.Enqueue(newSeed);
+                                        x = ScanEdgeLineRight(downPoint).X;
+                                    }
+                                }
+                                // 배경
+                                else if (downColor.ToArgb() == Color.White.ToArgb()) continue;
+                                // 노드
+                                else
+                                {
+                                    adjNodePointList.Add(downPoint);
+                                }
                             }
                         }
                     }
-                    for (int x = prevRight + 1; x <= curRight; x++)
+                    else
                     {
-                        Point upPoint = new Point(x, seedPoint.Y - 1);
-                        if (IsValidPoint(upPoint))
+                        for (int x = curLeft; x <= curRight; x++)
                         {
-                            Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
-                            // 간선
-                            if (upColor.ToArgb() == Color.Black.ToArgb())
+                            Point downPoint = new Point(x, seedPoint.Y + 1);
+                            if (IsValidPoint(downPoint))
                             {
-                                if (!IsExistEdgePoint(upPoint))
+                                Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
+                                // 간선
+                                if (downColor.ToArgb() == Color.Black.ToArgb())
                                 {
-                                    SeedPointInfo newSeed = new SeedPointInfo(upPoint, curLeft, curRight, SearchDirection.DOWN);
-                                    readyQueue.Enqueue(newSeed);
-                                    x = ScanEdgeLineRight(upPoint).X;
+                                    if (!IsExistEdgePoint(downPoint))
+                                    {
+                                        SeedPointInfo newSeed = new SeedPointInfo(downPoint, curLeft, curRight, SearchDirection.UP);
+                                        readyQueue.Enqueue(newSeed);
+                                        x = ScanEdgeLineRight(downPoint).X;
+                                    }
                                 }
-                            }
-                            // 배경
-                            else if (upColor.ToArgb() == Color.White.ToArgb()) continue;
-                            // 노드
-                            else
-                            {
-                                adjNodePointList.Add(upPoint);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int x = curLeft; x <= curRight; x++)
-                    {
-                        Point upPoint = new Point(x, seedPoint.Y - 1);
-                        if (IsValidPoint(upPoint))
-                        {
-                            Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
-                            // 간선
-                            if (upColor.ToArgb() == Color.Black.ToArgb())
-                            {
-                                if (!IsExistEdgePoint(upPoint))
+                                // 배경
+                                else if (downColor.ToArgb() == Color.White.ToArgb()) continue;
+                                // 노드
+                                else
                                 {
-                                    SeedPointInfo newSeed = new SeedPointInfo(upPoint, curLeft, curRight, SearchDirection.DOWN);
-                                    readyQueue.Enqueue(newSeed);
-                                    x = ScanEdgeLineRight(upPoint).X;
+                                    adjNodePointList.Add(downPoint);
                                 }
-                            }
-                            // 배경
-                            else if (upColor.ToArgb() == Color.White.ToArgb()) continue;
-                            // 노드
-                            else
-                            {
-                                adjNodePointList.Add(upPoint);
                             }
                         }
                     }
                 }
 
-                if (flag == SearchDirection.DOWN)
-                {
-                    for (int x = curLeft; x < prevLeft; x++)
-                    {
-                        Point downPoint = new Point(x, seedPoint.Y + 1);
-                        if (IsValidPoint(downPoint))
-                        {
-                            Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
-                            // 간선
-                            if (downColor.ToArgb() == Color.Black.ToArgb())
-                            {
-                                if (!IsExistEdgePoint(downPoint))
-                                {
-                                    SeedPointInfo newSeed = new SeedPointInfo(downPoint, curLeft, curRight, SearchDirection.UP);
-                                    readyQueue.Enqueue(newSeed);
-                                    x = ScanEdgeLineRight(downPoint).X;
-                                }
-                            }
-                            // 배경
-                            else if (downColor.ToArgb() == Color.White.ToArgb()) continue;
-                            // 노드
-                            else
-                            {
-                                adjNodePointList.Add(downPoint);
-                            }
-                        }
-                    }
-                    for (int x = prevRight + 1; x <= curRight; x++)
-                    {
-                        Point downPoint = new Point(x, seedPoint.Y + 1);
-                        if (IsValidPoint(downPoint))
-                        {
-                            Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
-                            // 간선
-                            if (downColor.ToArgb() == Color.Black.ToArgb())
-                            {
-                                if (!IsExistEdgePoint(downPoint))
-                                {
-                                    SeedPointInfo newSeed = new SeedPointInfo(downPoint, curLeft, curRight, SearchDirection.UP);
-                                    readyQueue.Enqueue(newSeed);
-                                    x = ScanEdgeLineRight(downPoint).X;
-                                }
-                            }
-                            // 배경
-                            else if (downColor.ToArgb() == Color.White.ToArgb()) continue;
-                            // 노드
-                            else
-                            {
-                                adjNodePointList.Add(downPoint);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    for (int x = curLeft; x <= curRight; x++)
-                    {
-                        Point downPoint = new Point(x, seedPoint.Y + 1);
-                        if (IsValidPoint(downPoint))
-                        {
-                            Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
-                            // 간선
-                            if (downColor.ToArgb() == Color.Black.ToArgb())
-                            {
-                                if (!IsExistEdgePoint(downPoint))
-                                {
-                                    SeedPointInfo newSeed = new SeedPointInfo(downPoint, curLeft, curRight, SearchDirection.UP);
-                                    readyQueue.Enqueue(newSeed);
-                                    x = ScanEdgeLineRight(downPoint).X;
-                                }
-                            }
-                            // 배경
-                            else if (downColor.ToArgb() == Color.White.ToArgb()) continue;
-                            // 노드
-                            else
-                            {
-                                adjNodePointList.Add(downPoint);
-                            }
-                        }
-                    }
-                }
             }
 
         }
@@ -336,7 +338,7 @@ namespace NOS02
             return new Point(x - 1, seedPoint.Y);
         }
 
-        private void DrawHorizonLine(int left, int right, int y)
+        private bool DrawHorizonLine(int left, int right, int y)
         {
             EdgeLine newLine = new EdgeLine(left, right, y);
             SortedSet<EdgeLine> lineSet;
@@ -344,12 +346,18 @@ namespace NOS02
             {
                 foreach (EdgeLine item in lineSet)
                 {
+                    // 같은 간선인 경우
+                    if (item.LeftPoint.X == newLine.LeftPoint.X)
+                    {
+                        return false;
+                    }
                     // 이어지는 간선일 경우
-                    if (item.LeftPoint.X + item.Width == newLine.LeftPoint.X)
+                    else if (item.LeftPoint.X + item.Width == newLine.LeftPoint.X)
                     {
                         item.Width += newLine.Width;
-                        return;
+                        return true;
                     }
+                    // 다른 간선인 경우
                     else if (item.LeftPoint.X + item.Width > newLine.LeftPoint.X) break;
                 }
                 lineSet.Add(newLine);
@@ -360,6 +368,7 @@ namespace NOS02
                 lineSet.Add(newLine);
                 edgeLineSetDict.Add(newLine.LeftPoint.Y, lineSet);
             }
+            return true;
         }
 
         private bool IsValidPoint(Point p)
