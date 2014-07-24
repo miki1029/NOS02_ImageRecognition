@@ -13,14 +13,14 @@ namespace NOS02
         private Bitmap imageBitmap;
         private SortedSet<Node> nodeSet;
         private List<Edge> edgeList;
-        private Dictionary<Point, int> edgeLineDict;
+        private Dictionary<int, SortedSet<EdgeLine>> edgeLineSetDict;
 
         public ImageRecognizer(Bitmap b)
         {
             imageBitmap = b;
             nodeSet = new SortedSet<Node>();
             edgeList = new List<Edge>();
-            edgeLineDict = new Dictionary<Point, int>();
+            edgeLineSetDict = new Dictionary<int, SortedSet<EdgeLine>>();
         }
 
         public void RecognizeImage()
@@ -41,11 +41,11 @@ namespace NOS02
                         int jump = JumpSizeExistEdge(curPoint);
                         if (jump == 0)
                         {
-                            x += SearchEdge(curPoint);
+                            x += SearchEdge(curPoint) - 1;
                         }
                         else
                         {
-                            x += jump;
+                            x += jump - 1;
                         }
                     }
                     // 노드
@@ -78,210 +78,189 @@ namespace NOS02
             imageBitmap.Dispose();
         }
 
-        private enum SearchDirection { UP, DOWN, UPDOWN, NOSEARCH }
+        private enum SearchDirection { UP, DOWN, NOSEARCH }
 
         private int SearchEdge(Point startPoint)
         {
-            Queue<Point> downSearchQueue = new Queue<Point>();
-            Queue<Point> upDownSearchQueue = new Queue<Point>();
-            Queue<Point> upSearchQueue = new Queue<Point>();
-
             List<Point> adjNodePointList = new List<Point>();
 
-            downSearchQueue.Enqueue(startPoint);
-
-            while (downSearchQueue.Count > 0 && upDownSearchQueue.Count > 0 && upSearchQueue.Count > 0)
-            {
-                if (downSearchQueue.Count > 0)
-                {
-                    Point curPoint = downSearchQueue.Dequeue();
-
-                    Point leftPoint = ScanEdgeLineLeft(curPoint, SearchDirection.DOWN,
-                        upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-                    Point rightPoint = ScanEdgeLineRight(curPoint, SearchDirection.DOWN,
-                        upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-
-                    int width = rightPoint.X - leftPoint.X + 1;
-
-                    edgeLineDict.Add(curPoint, width);
-
-                    // 아랫점 조사
-                    Point downPoint = new Point(curPoint.X, curPoint.Y + 1);
-                    Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
-                    if (downColor.ToArgb() == Color.Black.ToArgb())
-                    {
-                        Point downLeftPoint = ScanEdgeLineLeft(curPoint, SearchDirection.NOSEARCH,
-                            upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-                        Point downRightPoint = ScanEdgeLineRight(curPoint, SearchDirection.NOSEARCH,
-                            upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-
-                        if (downLeftPoint.X <= leftPoint.X || downRightPoint.X >= rightPoint.X)
-                            upDownSearchQueue.Enqueue(downPoint);
-                        else
-                            downSearchQueue.Enqueue(downPoint);
-                    }
-                }
-
-                if (upDownSearchQueue.Count > 0)
-                {
-                    Point curPoint = upDownSearchQueue.Dequeue();
-
-                    Point leftPoint = ScanEdgeLineLeft(curPoint, SearchDirection.UP,
-                        upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-                    Point rightPoint = ScanEdgeLineRight(curPoint, SearchDirection.UP,
-                        upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-
-                    int width = rightPoint.X - leftPoint.X + 1;
-
-                    edgeLineDict.Add(curPoint, width);
-
-                    // 윗점 조사
-                    Point upPoint = new Point(curPoint.X, curPoint.Y - 1);
-                    Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
-                    if (upColor.ToArgb() == Color.Black.ToArgb())
-                    {
-                        Point upLeftPoint = ScanEdgeLineLeft(curPoint, SearchDirection.NOSEARCH,
-                            upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-                        Point upRightPoint = ScanEdgeLineRight(curPoint, SearchDirection.NOSEARCH,
-                            upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-
-                        if (upLeftPoint.X <= leftPoint.X || upRightPoint.X >= rightPoint.X)
-                            upDownSearchQueue.Enqueue(upPoint);
-                        else
-                            upSearchQueue.Enqueue(upPoint);
-                    }
-                }
-
-                if (upSearchQueue.Count > 0)
-                {
-                    Point curPoint = upSearchQueue.Dequeue();
-
-                    Point leftPoint = ScanEdgeLineLeft(curPoint, SearchDirection.UPDOWN,
-                        upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-                    Point rightPoint = ScanEdgeLineRight(curPoint, SearchDirection.UPDOWN,
-                        upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-
-                    int width = rightPoint.X - leftPoint.X + 1;
-
-                    edgeLineDict.Add(curPoint, width);
-
-                    // 아랫점 조사
-                    Point downPoint = new Point(curPoint.X, curPoint.Y + 1);
-                    Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
-                    if (downColor.ToArgb() == Color.Black.ToArgb())
-                    {
-                        Point downLeftPoint = ScanEdgeLineLeft(curPoint, SearchDirection.NOSEARCH,
-                            upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-                        Point downRightPoint = ScanEdgeLineRight(curPoint, SearchDirection.NOSEARCH,
-                            upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-
-                        if (downLeftPoint.X <= leftPoint.X || downRightPoint.X >= rightPoint.X)
-                            upDownSearchQueue.Enqueue(downPoint);
-                        else
-                            downSearchQueue.Enqueue(downPoint);
-                    }
-
-                    // 윗점 조사
-                    Point upPoint = new Point(curPoint.X, curPoint.Y - 1);
-                    Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
-                    if (upColor.ToArgb() == Color.Black.ToArgb())
-                    {
-                        Point upLeftPoint = ScanEdgeLineLeft(curPoint, SearchDirection.NOSEARCH,
-                            upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-                        Point upRightPoint = ScanEdgeLineRight(curPoint, SearchDirection.NOSEARCH,
-                            upSearchQueue, downSearchQueue, upDownSearchQueue, adjNodePointList);
-
-                        if (upLeftPoint.X <= leftPoint.X || upRightPoint.X >= rightPoint.X)
-                            upDownSearchQueue.Enqueue(upPoint);
-                        else
-                            upSearchQueue.Enqueue(upPoint);
-                    }
-                }
-
-            }
+            LineFill(startPoint, 0, 0, SearchDirection.NOSEARCH, adjNodePointList);
 
             Edge newEdge = new Edge(adjNodePointList);
             edgeList.Add(newEdge);
 
             return JumpSizeExistEdge(startPoint);
         }
-
-        private Point ScanEdgeLineLeft(Point seedPoint, SearchDirection direction,
-            Queue<Point> upSearchQueue, Queue<Point> downSearchQueue, Queue<Point> upDownSearchQueue, List<Point> adjNodePointList)
+        private int LineFill(Point seedPoint, int prevLeft, int prevRight, SearchDirection flag, List<Point> adjNodePointList)
         {
-            bool continuous = false;
-            Point dummyPoint = new Point(-1, -1);
-            Point newSeedPoint = dummyPoint;
-            Queue<Point> searchQueue = upDownSearchQueue;
+            int curLeft = ScanEdgeLineLeft(seedPoint, adjNodePointList).X;
+            int curRight = ScanEdgeLineRight(seedPoint, adjNodePointList).X;
+            DrawHorizonLine(curLeft, curRight, seedPoint.Y);
 
+            if(flag == SearchDirection.UP)
+            {
+                for (int x = curLeft; x < prevLeft; x++)
+                {
+                    Point upPoint = new Point(x, seedPoint.Y - 1);
+                    if (IsValidPoint(upPoint))
+                    {
+                        Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
+                        // 간선
+                        if (upColor.ToArgb() == Color.Black.ToArgb())
+                        {
+                            if (!IsExistEdgePoint(upPoint))
+                            {
+                                x = LineFill(new Point(x, seedPoint.Y - 1), curLeft, curRight, SearchDirection.DOWN, adjNodePointList);
+                            }
+                        }
+                        // 배경
+                        else if (upColor.ToArgb() == Color.White.ToArgb()) continue;
+                        // 노드
+                        else
+                        {
+                            adjNodePointList.Add(upPoint);
+                        }
+                    }
+                }
+                for (int x = prevRight + 1; x <= curRight; x++)
+                {
+                    Point upPoint = new Point(x, seedPoint.Y - 1);
+                    if (IsValidPoint(upPoint))
+                    {
+                        Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
+                        // 간선
+                        if (upColor.ToArgb() == Color.Black.ToArgb())
+                        {
+                            if (!IsExistEdgePoint(upPoint))
+                            {
+                                x = LineFill(new Point(x, seedPoint.Y - 1), curLeft, curRight, SearchDirection.DOWN, adjNodePointList);
+                            }
+                        }
+                        // 배경
+                        else if (upColor.ToArgb() == Color.White.ToArgb()) continue;
+                        // 노드
+                        else
+                        {
+                            adjNodePointList.Add(upPoint);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int x = curLeft; x <= curRight; x++)
+                {
+                    Point upPoint = new Point(x, seedPoint.Y - 1);
+                    if (IsValidPoint(upPoint))
+                    {
+                        Color upColor = imageBitmap.GetPixel(upPoint.X, upPoint.Y);
+                        // 간선
+                        if (upColor.ToArgb() == Color.Black.ToArgb())
+                        {
+                            if (!IsExistEdgePoint(upPoint))
+                            {
+                                x = LineFill(new Point(x, seedPoint.Y - 1), curLeft, curRight, SearchDirection.DOWN, adjNodePointList);
+                            }
+                        }
+                        // 배경
+                        else if (upColor.ToArgb() == Color.White.ToArgb()) continue;
+                        // 노드
+                        else
+                        {
+                            adjNodePointList.Add(upPoint);
+                        }
+                    }
+                }
+            }
+
+            if (flag == SearchDirection.DOWN)
+            {
+                for (int x = curLeft; x < prevLeft; x++)
+                {
+                    Point downPoint = new Point(x, seedPoint.Y + 1);
+                    if (IsValidPoint(downPoint))
+                    {
+                        Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
+                        // 간선
+                        if (downColor.ToArgb() == Color.Black.ToArgb())
+                        {
+                            if (!IsExistEdgePoint(downPoint))
+                            {
+                                x = LineFill(new Point(x, seedPoint.Y + 1), curLeft, curRight, SearchDirection.UP, adjNodePointList);
+                            }
+                        }
+                        // 배경
+                        else if (downColor.ToArgb() == Color.White.ToArgb()) continue;
+                        // 노드
+                        else
+                        {
+                            adjNodePointList.Add(downPoint);
+                        }
+                    }
+                }
+                for (int x = prevRight + 1; x <= curRight; x++)
+                {
+                    Point downPoint = new Point(x, seedPoint.Y + 1);
+                    if (IsValidPoint(downPoint))
+                    {
+                        Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
+                        // 간선
+                        if (downColor.ToArgb() == Color.Black.ToArgb())
+                        {
+                            if (!IsExistEdgePoint(downPoint))
+                            {
+                                x = LineFill(new Point(x, seedPoint.Y + 1), curLeft, curRight, SearchDirection.UP, adjNodePointList);
+                            }
+                        }
+                        // 배경
+                        else if (downColor.ToArgb() == Color.White.ToArgb()) continue;
+                        // 노드
+                        else
+                        {
+                            adjNodePointList.Add(downPoint);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int x = curLeft; x <= curRight; x++)
+                {
+                    Point downPoint = new Point(x, seedPoint.Y + 1);
+                    if (IsValidPoint(downPoint))
+                    {
+                        Color downColor = imageBitmap.GetPixel(downPoint.X, downPoint.Y);
+                        // 간선
+                        if (downColor.ToArgb() == Color.Black.ToArgb())
+                        {
+                            if (!IsExistEdgePoint(downPoint))
+                            {
+                                x = LineFill(new Point(x, seedPoint.Y + 1), curLeft, curRight, SearchDirection.UP, adjNodePointList);
+                            }
+                        }
+                        // 배경
+                        else if (downColor.ToArgb() == Color.White.ToArgb()) continue;
+                        // 노드
+                        else
+                        {
+                            adjNodePointList.Add(downPoint);
+                        }
+                    }
+                }
+            }
+
+            return curRight;
+        }
+
+        private Point ScanEdgeLineLeft(Point seedPoint, List<Point> adjNodePointList)
+        {
             int x = seedPoint.X - 1;
             for (; x >= 0; x--)
             {
                 Point checkPoint = new Point(x, seedPoint.Y);
                 Color checkColor = imageBitmap.GetPixel(checkPoint.X, checkPoint.Y);
                 // 간선
-                if (checkColor.ToArgb() == Color.Black.ToArgb())
-                {
-                    if (direction == SearchDirection.NOSEARCH) break;
-
-                    // 상 또는 하 탐색점 선정
-                    Point searchPoint = dummyPoint;
-                    Point searchPoint2 = dummyPoint;
-
-                    switch (direction)
-                    {
-                        case SearchDirection.UP:
-                            searchPoint = new Point(x, seedPoint.Y - 1);
-                            searchQueue = upSearchQueue;
-                            break;
-                        case SearchDirection.DOWN:
-                            searchPoint = new Point(x, seedPoint.Y + 1);
-                            searchQueue = downSearchQueue;
-                            break;
-                        case SearchDirection.UPDOWN:
-                            searchPoint = new Point(x, seedPoint.Y - 1);
-                            searchPoint2 = new Point(x, seedPoint.Y + 1);
-                            searchQueue = upSearchQueue;
-                            break;
-                        default:
-                            throw new IndexOutOfRangeException();
-                    }
-
-                    // 탐색점 색 확인 (UPDOWN인 경우만 2회 탐색)
-                    for(int i = 0; i < 2; i++)
-                    {
-                        Color searchColor = imageBitmap.GetPixel(searchPoint.X, searchPoint.Y);
-                        // 상하 탐색점이 간선
-                        if (searchColor.ToArgb() == Color.Black.ToArgb())
-                        {
-                            if (!continuous)
-                            {
-                                continuous = true;
-                                if (newSeedPoint != dummyPoint)
-                                    searchQueue.Enqueue(newSeedPoint);
-                                newSeedPoint = searchPoint;
-                            }
-                        }
-                        // 상하 탐색점이 배경
-                        else if (searchColor.ToArgb() == Color.White.ToArgb())
-                        {
-                            continuous = false;
-                        }
-                        // 상하 탐색점이 노드
-                        else
-                        {
-                            continuous = false;
-                            adjNodePointList.Add(searchPoint);
-                        }
-                        // UPDOWN이 아니면 빠져나오고 UPDOWN이면 조건을 바꿈
-                        if (searchPoint2 == dummyPoint) break;
-                        else
-                        {
-                            searchPoint = searchPoint2;
-                            searchQueue = downSearchQueue;
-                        }
-                    }
-                }
+                if (checkColor.ToArgb() == Color.Black.ToArgb()) continue;
                 // 배경
                 else if (checkColor.ToArgb() == Color.White.ToArgb()) break;
                 // 노드
@@ -289,108 +268,20 @@ namespace NOS02
                 {
                     adjNodePointList.Add(checkPoint);
                     break;
-                }
-            }
-
-            // 마지막 seedPoint 추가
-            if (newSeedPoint != dummyPoint)
-            {
-                // 끝 점인데 상(또는 하) 방향에 인접 간선 점이 있을 경우
-                if (continuous)
-                {
-                    upDownSearchQueue.Enqueue(newSeedPoint);
-                }
-                else
-                {
-                    searchQueue.Enqueue(newSeedPoint);
                 }
             }
             return new Point(x + 1, seedPoint.Y);
         }
 
-        private Point ScanEdgeLineRight(Point seedPoint, SearchDirection direction,
-            Queue<Point> upSearchQueue, Queue<Point> downSearchQueue, Queue<Point> upDownSearchQueue, List<Point> adjNodePointList)
+        private Point ScanEdgeLineRight(Point seedPoint, List<Point> adjNodePointList)
         {
-            bool continuous = false;
-            Point dummyPoint = new Point(-1, -1);
-            Point newSeedPoint = dummyPoint;
-
-            int x = seedPoint.X + 1; // 현재 점 오른 쪽 부터
+            int x = seedPoint.X + 1;
             for (; x < imageBitmap.Width; x++)
             {
                 Point checkPoint = new Point(x, seedPoint.Y);
                 Color checkColor = imageBitmap.GetPixel(checkPoint.X, checkPoint.Y);
                 // 간선
-                if (checkColor.ToArgb() == Color.Black.ToArgb())
-                {
-                    Point searchPoint;
-                    Color searchColor;
-                    // 상하 탐색(탐색 방향에 따라)
-                    switch (direction)
-                    {
-                        case SearchDirection.UP:
-                            searchPoint = new Point(x, seedPoint.Y - 1);
-                            break;
-                        case SearchDirection.DOWN:
-                            searchPoint = new Point(x, seedPoint.Y + 1);
-                            break;
-                        case SearchDirection.UPDOWN:
-                            searchPoint = new Point(x, seedPoint.Y - 1);
-                            // UPDOWN의 경우 두 개의 점을 봐야 함.
-                            searchColor = imageBitmap.GetPixel(searchPoint.X, searchPoint.Y);
-
-                            // 상하 탐색점이 간선
-                            if (searchColor.ToArgb() == Color.Black.ToArgb())
-                            {
-                                if (!continuous)
-                                {
-                                    continuous = true;
-                                    if (newSeedPoint != dummyPoint)
-                                        upSearchQueue.Enqueue(newSeedPoint);
-                                    newSeedPoint = searchPoint;
-                                }
-                            }
-                            // 상하 탐색점이 배경
-                            else if (searchColor.ToArgb() == Color.White.ToArgb())
-                            {
-                                continuous = false;
-                            }
-                            // 상하 탐색점이 노드
-                            else
-                            {
-                                continuous = false;
-                                adjNodePointList.Add(searchPoint);
-                            }
-                            searchPoint = new Point(x, seedPoint.Y + 1);
-                            break;
-                        default:
-                            throw new IndexOutOfRangeException();
-                    }
-                    searchColor = imageBitmap.GetPixel(searchPoint.X, searchPoint.Y);
-
-                    // 상하 탐색점이 간선
-                    if (searchColor.ToArgb() == Color.Black.ToArgb())
-                    {
-                        if (!continuous)
-                        {
-                            continuous = true;
-                            if (newSeedPoint != dummyPoint)
-                                upSearchQueue.Enqueue(newSeedPoint);
-                            newSeedPoint = searchPoint;
-                        }
-                    }
-                    // 상하 탐색점이 배경
-                    else if (searchColor.ToArgb() == Color.White.ToArgb())
-                    {
-                        continuous = false;
-                    }
-                    // 상하 탐색점이 노드
-                    else
-                    {
-                        continuous = false;
-                        adjNodePointList.Add(searchPoint);
-                    }
-                }
+                if (checkColor.ToArgb() == Color.Black.ToArgb()) continue;
                 // 배경
                 else if (checkColor.ToArgb() == Color.White.ToArgb()) break;
                 // 노드
@@ -400,13 +291,33 @@ namespace NOS02
                     break;
                 }
             }
+            return new Point(x - 1, seedPoint.Y);
+        }
 
-            // 끝 점인데 상(또는 하) 방향에 인접 간선 점이 있을 경우
-            if (continuous && newSeedPoint != dummyPoint)
+        private void DrawHorizonLine(int left, int right, int y)
+        {
+            EdgeLine newLine = new EdgeLine(left, right, y);
+            SortedSet<EdgeLine> lineSet;
+            if (edgeLineSetDict.TryGetValue(y, out lineSet))
             {
-                upDownSearchQueue.Enqueue(newSeedPoint);
+                foreach (EdgeLine item in lineSet)
+                {
+                    // 이어지는 간선일 경우
+                    if (item.LeftPoint.X + item.Width == newLine.LeftPoint.X)
+                    {
+                        item.Width += newLine.Width;
+                        return;
+                    }
+                    else if (item.LeftPoint.X + item.Width > newLine.LeftPoint.X) break;
+                }
+                lineSet.Add(newLine);
             }
-            return new Point(x + 1, seedPoint.Y);
+            else
+            {
+                lineSet = new SortedSet<EdgeLine>();
+                lineSet.Add(newLine);
+                edgeLineSetDict.Add(newLine.LeftPoint.Y, lineSet);
+            }
         }
 
         private bool IsValidPoint(Point p)
@@ -417,11 +328,37 @@ namespace NOS02
 
         private int JumpSizeExistEdge(Point searchPoint)
         {
-            int width;
-            if (edgeLineDict.TryGetValue(searchPoint, out width))
-                return width - 1;
-            else
-               return 0;
+            SortedSet<EdgeLine> findSet;
+            if (edgeLineSetDict.TryGetValue(searchPoint.Y, out findSet))
+            {
+                foreach (EdgeLine item in findSet)
+                {
+                    if (searchPoint.X >= item.LeftPoint.X && searchPoint.X < item.LeftPoint.X + item.Width)
+                    {
+                        int jump = item.Width - (searchPoint.X - item.LeftPoint.X);
+                        return jump;
+                    }
+                    else if (item.LeftPoint.X > searchPoint.X) break;
+                }
+            }
+            return 0;
+        }
+
+        private bool IsExistEdgePoint(Point searchPoint)
+        {
+            SortedSet<EdgeLine> findSet;
+            if (edgeLineSetDict.TryGetValue(searchPoint.Y, out findSet))
+            {
+                foreach (EdgeLine item in findSet)
+                {
+                    if (searchPoint.X >= item.LeftPoint.X && searchPoint.X < item.LeftPoint.X + item.Width)
+                    {
+                        return true;
+                    }
+                    else if (item.LeftPoint.X > searchPoint.X) break;
+                }
+            }
+            return false;
         }
 
         private int SearchNode(Point startPoint, Color curColor)
